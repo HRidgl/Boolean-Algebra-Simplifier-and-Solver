@@ -155,12 +155,6 @@ mainLoop = do
     then do
       putStrLn "Invalid choice"
       mainLoop
-    else if filename == "random.txt"
-        then do
-          startGen <- makeSeed
-          let loadedLevels = generateNLevels 10 startGen
-          putStrLn "--------------------------"
-          printPackDetails loadedLevels "Random Pack"
         else do
           fileData <- readFile filename
           let loadedLevels = mapMaybe loadLevel (lines fileData)
