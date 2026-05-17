@@ -2,7 +2,6 @@ module Levels where
 
 import Expression
 import Parsing
-import System.Random
 import Data.List
 
 -- Level record
