@@ -227,15 +227,15 @@ checkInput ui pastAttempts
 -- -- Abstract Syntax Tree helper functions --
 -- -------------------------------------------
 
--- Helper function, walks through the tree and extracts a list of integers the player used
-extractNums :: Expr -> [Int]
-extractNums (Val n) = [n]
-extractNums (Calc _ e1 e2) = extractNums e1 ++ extractNums e2
+-- -- Helper function, walks through the tree and extracts a list of integers the player used
+-- extractNums :: Expr -> [Int]
+-- extractNums (Val n) = [n]
+-- extractNums (Calc _ e1 e2) = extractNums e1 ++ extractNums e2
 
--- Helper function, to extract the list of operators the player used
-extractOps :: Expr -> [Op]
-extractOps (Val _) = []
-extractOps (Calc op e1 e2) = op : (extractOps e1 ++ extractOps e2)
+-- -- Helper function, to extract the list of operators the player used
+-- extractOps :: Expr -> [Op]
+-- extractOps (Val _) = []
+-- extractOps (Calc op e1 e2) = op : (extractOps e1 ++ extractOps e2)
 
 -- -------------------------------
 -- -- Hints and AI solver logic --

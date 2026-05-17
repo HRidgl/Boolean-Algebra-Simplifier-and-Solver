@@ -11,7 +11,7 @@ instance Show Op where -- pretty printing for the operators
     show NOT = "*"
 
 -- Expression type
-data Expr = Val Int | Calc Op Expr Expr deriving (Show, Eq, Ord) -- expression definition (either one value or a calculation)
+data Expr = Var String | Simplify Op Expr Expr deriving (Show, Eq, Ord) -- expression definition (either one value or a calculation)
 
 -- Structured error type
 data EvalError = DivByZero | NonIntegerDiv | NegativeExponent deriving (Eq) -- structured error
@@ -62,8 +62,8 @@ eval _ = Right 0
 --                     Right (v1 `div` v2)
 
 prettyPrint :: Expr -> String
-prettyPrint (Val n) = if n < 0 then "(" ++ show n ++ ")" else show n
-prettyPrint (Calc op e1 e2) = "(" ++ prettyPrint e1 ++ " " ++ show op ++ " " ++ prettyPrint e2 ++ ")"
+prettyPrint (Var n) = show n
+prettyPrint (Simplify op e1 e2) = "(" ++ prettyPrint e1 ++ " " ++ show op ++ " " ++ prettyPrint e2 ++ ")"
 
 -- normalises an expression by alphabetising and sorting operations
 normalise :: Expr -> Expr

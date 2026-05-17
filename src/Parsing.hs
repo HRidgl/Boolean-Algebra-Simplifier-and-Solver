@@ -2,6 +2,7 @@
 
 
 -- Stating the name of the module so that it can be imported later
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
 module Parsing where
 
 
@@ -123,7 +124,7 @@ many1 p = do
 nat :: Parser Expr
 nat = do
   xs <- many1 (token digit)
-  return (Val(read xs))
+  return (Var (read xs))
 
 
 
@@ -141,7 +142,7 @@ int =
 
 -- Makes a negative number negative by negating the value n inside
 makeNegative :: Expr -> Expr
-makeNegative (Val n) = Val (-n)
+makeNegative (Var n) = Var ("-" ++ show n)
 makeNegative n = n
 
 
@@ -178,7 +179,7 @@ integer = token int
 
 -- Only parses if the input is valid else the value 0 is returned
 cleanExpressionParser :: String -> Either String Expr
-cleanExpressionParser a = 
+cleanExpressionParser a =
   if validParse a
   then case parse expr a of
     [(parsedExpr, "")] -> Right parsedExpr
@@ -191,78 +192,72 @@ cleanExpressionParser a =
 -- This function checks that only numbers, operators, parenthesese and whitespace are in the user input expression
 validParse :: String -> Bool
 validParse [] = True
-validParse (x:xs) | isDigit x   = validParse xs
-                  | x == '+'    = validParse xs
+validParse (x:xs) | x == 'A'    = validParse xs
+                  | x == 'B'    = validParse xs
+                  | x == '&'    = validParse xs
+                  | x == '|'    = validParse xs
                   | x == '-'    = validParse xs
-                  | x == '*'    = validParse xs
-                  | x == '/'    = validParse xs
                   | isSpace x   = validParse xs
-                  | x == '('    = validParse xs
-                  | x == ')'    = validParse xs
-                  | x == '^'    = validParse xs
-                  | x == '%'    = validParse xs
                   | otherwise   = False
 
 
--- This function returns the desired Op for the higher precedence operators
-higherPrecedenceOperators :: Parser Op
-higherPrecedenceOperators = (do
-                                symbol "^"
-                                return Pow)
-                            |||
-                            (do
-                                symbol "%"
-                                return Mod)
+-- -- This function returns the desired Op for the higher precedence operators
+-- higherPrecedenceOperators :: Parser Op
+-- higherPrecedenceOperators = (do
+--                                 symbol "^"
+--                                 return Pow)
+--                             |||
+--                             (do
+--                                 symbol "%"
+--                                 return Mod)
 
 -- This function returns the desired Op for the medium precedence operators
 mediumPrecedenceOperators :: Parser Op
-mediumPrecedenceOperators = (do
-                                symbol "*"
-                                return Mul)
-                            |||
-                            (do
-                                symbol "/"
-                                return Div)
+mediumPrecedenceOperators = do
+                                symbol "-"
+                                return NOT
 
 -- This function returns the desired Op for the lower precedence operators
 lowerPrecedenceOperators :: Parser Op
 lowerPrecedenceOperators = (do
-                                symbol "+"
-                                return Add)
+                                symbol "&"
+                                return AND)
                             |||
                             (do
-                                symbol "-"
-                                return Sub)
+                                symbol "|"
+                                return OR)
 
 
 -- This method builds factors out of either a single natural number or a parenthesised expression
 factor :: Parser Expr
-factor = integer
-        ||| do
-                symbol "("
-                e1 <- expr
-                symbol ")"
-                return e1
+factor =
+      variable
+  ||| integer
+  ||| do
+        symbol "("
+        e1 <- expr
+        symbol ")"
+        return e1
 
--- This function builds special expressions from many natural numbers
-specialExpr :: Parser Expr
-specialExpr = do
-          f1 <- factor
-          rest <- many (do
-                          op <- higherPrecedenceOperators
-                          f2 <- factor
-                          return (op, f2))
-          return (foldl (\acc (op, f2) -> Calc op acc f2) f1 rest)
+-- -- This function builds special expressions from many natural numbers
+-- specialExpr :: Parser Expr
+-- specialExpr = do
+--           f1 <- factor
+--           rest <- many (do
+--                           op <- higherPrecedenceOperators
+--                           f2 <- factor
+--                           return (op, f2))
+--           return (foldl (\acc (op, f2) -> Calc op acc f2) f1 rest)
 
 -- This function builds terms from many special expressions
 term :: Parser Expr
 term = do
-          s1 <- specialExpr
+          s1 <- factor
           rest <- many (do
                           op <- mediumPrecedenceOperators
-                          s2 <- specialExpr
+                          s2 <- factor
                           return (op, s2))
-          return (foldl (\acc (op, s2) -> Calc op acc s2) s1 rest)
+          return (foldl (\acc (op, s2) -> Simplify op acc s2) s1 rest)
 
 -- This function builds expressions from many terms
 expr :: Parser Expr
@@ -272,7 +267,7 @@ expr = do
                         op <- lowerPrecedenceOperators
                         t2 <- term
                         return (op, t2))
-        return (foldl (\acc (op, t2) -> Calc op acc t2) t1 rest)
+        return (foldl (\acc (op, t2) -> Simplify op acc t2) t1 rest)
 
 --------------------------
 -- Level Loader Parsing --
@@ -286,12 +281,9 @@ natInt = do
 
 -- Parses an operator character into the Op type
 opParser :: Parser Op
-opParser = (char '+' >> return Add)
-        ||| (char '-' >> return Sub)
-        ||| (char '*' >> return Mul)
-        ||| (char '/' >> return Div)
-        ||| (char '^' >> return Pow)
-        ||| (char '%' >> return Mod)
+opParser = (char '&' >> return AND)
+        ||| (char '|' >> return OR)
+        ||| (char '-' >> return NOT)
 
 -- Parses a list separated by a comma
 sepByComma :: Parser a -> Parser [a]
@@ -299,3 +291,8 @@ sepByComma p = do
   v <- p
   vs <- many (do { char ','; p })
   return (v:vs)
+
+variable :: Parser Expr
+variable = do
+  xs <- token (many1 (sat isUpper))
+  return (Var xs)
