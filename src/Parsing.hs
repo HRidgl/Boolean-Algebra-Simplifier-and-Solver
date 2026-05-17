@@ -195,7 +195,7 @@ validParse [] = True
 validParse (x:xs) | x == 'A'    = validParse xs
                   | x == 'B'    = validParse xs
                   | x == '&'    = validParse xs
-                  | x == '|'    = validParse xs
+                  | x == '+'    = validParse xs
                   | x == '-'    = validParse xs
                   | isSpace x   = validParse xs
                   | otherwise   = False
@@ -224,7 +224,7 @@ lowerPrecedenceOperators = (do
                                 return AND)
                             |||
                             (do
-                                symbol "|"
+                                symbol "+"
                                 return OR)
 
 

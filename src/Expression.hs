@@ -62,7 +62,7 @@ eval _ = Right 0
 --                     Right (v1 `div` v2)
 
 prettyPrint :: Expr -> String
-prettyPrint (Var n) = show n
+prettyPrint (Var n) = n
 prettyPrint (Simplify op e1 e2) = "(" ++ prettyPrint e1 ++ " " ++ show op ++ " " ++ prettyPrint e2 ++ ")"
 
 -- normalises an expression by alphabetising and sorting operations
